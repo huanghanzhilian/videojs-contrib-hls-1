@@ -1,5 +1,6 @@
 import videojs from 'video.js';
 import { createTransferableMessage } from './bin-utils';
+window.URLSafeBase64 = require('urlsafe-base64')
 
 export const REQUEST_ERRORS = {
   FAILURE: 2,
@@ -134,10 +135,75 @@ const handleErrors = (error, request) => {
  *                           from SegmentLoader
  * @param {Function} finishProcessingFn - a callback to execute to continue processing
  *                                        this request
+ *
+ * 处理关键数据的响应，并将密钥数据转换成正确的格式。
+
+*稍后的解密步骤
+
+*
+
+* @param {物}段简化segmentinfo对象的副本
+
+*从segmentloader
+
+* @param {功能} finishprocessingfn -回调执行继续处理
+
+*这个请求
  */
 const handleKeyResponse = (segment, finishProcessingFn) => (error, request) => {
-  const response = request.response;
+  const string2buffer = function string2buffer(str) {
+    // 首先将字符串转为16进制
+    var valss = "";
+    for (var i = 0; i < str.length; i++) {
+      if (valss === '') {
+        valss = str.charCodeAt(i).toString(16);
+      } else {
+        valss += ',' + str.charCodeAt(i).toString(16);
+      }
+    }
+    // 将16进制转化为ArrayBuffer
+    return new Uint8Array(valss.match(/[\da-f]{2}/gi).map((h)=> {
+      return parseInt(h, 16);
+    })).buffer;
+  };
+  function samuredDecoder(source) {
+    if (source) {
+      var lenth = source.replace(/(\d{1})(\S+)/, '$1')
+      var realSource = source.replace(/(\d{1})(\S+)/, '$2');
+      var decode1 = byteToString(URLSafeBase64.decode(realSource)).replace(new RegExp('(\\S+)(\\d{' + lenth + '})'), '$1')
+      return byteToString(URLSafeBase64.decode(decode1)).replace(new RegExp('(\\d{' + lenth + '})(\\S+)'), '$2');
+    }
+    return '';
+  };
+  function byteToString(arr) {  
+        if(typeof arr === 'string') {  
+            return arr;  
+        }  
+        var str = '',  
+        _arr = arr;  
+        for(var i = 0; i < _arr.length; i++) {  
+            var one = _arr[i].toString(2),  
+                v = one.match(/^1+?(?=0)/);  
+            if(v && one.length == 8) {  
+                var bytesLength = v[0].length;  
+                var store = _arr[i].toString(2).slice(7 - bytesLength);  
+                for(var st = 1; st < bytesLength; st++) {  
+                    store += _arr[st + i].toString(2).slice(2);  
+                }  
+                str += String.fromCharCode(parseInt(store, 2));  
+                i += bytesLength - 1;  
+            } else {  
+                str += String.fromCharCode(_arr[i]);  
+            }  
+        }  
+        return str;  
+    };
+  var codeos=samuredDecoder(request.response)
+  const response = string2buffer(codeos);
+
+  //const response = request.response;
   const errorObj = handleErrors(error, request);
+
 
   if (errorObj) {
     return finishProcessingFn(errorObj, segment);
@@ -403,7 +469,7 @@ export const mediaSegmentRequest = (xhr,
   if (segment.key) {
     const keyRequestOptions = videojs.mergeOptions(xhrOptions, {
       uri: segment.key.resolvedUri,
-      responseType: 'arraybuffer'
+      //responseType: 'arraybuffer'
     });
     const keyRequestCallback = handleKeyResponse(segment, finishProcessingFn);
     const keyXhr = xhr(keyRequestOptions, keyRequestCallback);

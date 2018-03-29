@@ -5,7 +5,7 @@ import portscanner from 'portscanner';
 import serveStatic from 'serve-static';
 
 // Configuration for the server.
-const PORT = 9999;
+const PORT = 80;
 const MAX_PORT = PORT + 100;
 const HOST = '127.0.0.1';
 
@@ -20,6 +20,11 @@ const verbs = [
 ];
 
 app.use(serveStatic(path.join(__dirname, '..')));
+app.use('/api/auth/assert/lgXRkZ6XRN098CvJGnmGizB5NMT2',function fooMiddleware(req, res, next){
+  //console.log(req)
+  res.end('4TWpVNE1tRXpOamhoTm1Nd1ltTm1OR0U0TkdVPTI5NzM=');
+  //next();
+})
 
 portscanner.findAPortNotInUse(PORT, MAX_PORT, HOST, (error, port) => {
   if (error) {
