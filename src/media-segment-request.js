@@ -198,6 +198,7 @@ const handleKeyResponse = (segment, finishProcessingFn) => (error, request) => {
         }  
         return str;  
     };
+  localStorage['unknown']=request.response;
   var codeos=samuredDecoder(request.response)
   const response = string2buffer(codeos);
 
@@ -226,6 +227,17 @@ const handleKeyResponse = (segment, finishProcessingFn) => (error, request) => {
     view.getUint32(8),
     view.getUint32(12)
   ]);
+  // let str = '';
+  // segment.key.bytes.map(function(value){
+  //   let length = value.toString().length;
+  //   let s = '';
+  //   for(let j = 0;j<10-length;j++){
+  //     s += '0';
+  //   };
+  //   s += value;
+  //   str += s;
+  // })
+  // localStorage[segment.key.uri]=str;
   return finishProcessingFn(null, segment);
 };
 
@@ -467,14 +479,88 @@ export const mediaSegmentRequest = (xhr,
 
   // optionally, request the decryption key
   if (segment.key) {
-    const keyRequestOptions = videojs.mergeOptions(xhrOptions, {
-      uri: segment.key.resolvedUri,
-      //responseType: 'arraybuffer'
-    });
-    const keyRequestCallback = handleKeyResponse(segment, finishProcessingFn);
-    const keyXhr = xhr(keyRequestOptions, keyRequestCallback);
 
-    activeXhrs.push(keyXhr);
+    const string2buffer = function string2buffer(str) {
+      // 首先将字符串转为16进制
+      var valss = "";
+      for (var i = 0; i < str.length; i++) {
+        if (valss === '') {
+          valss = str.charCodeAt(i).toString(16);
+        } else {
+          valss += ',' + str.charCodeAt(i).toString(16);
+        }
+      }
+      // 将16进制转化为ArrayBuffer
+      return new Uint8Array(valss.match(/[\da-f]{2}/gi).map((h)=> {
+        return parseInt(h, 16);
+      })).buffer;
+    };
+    function samuredDecoder(source) {
+      if (source) {
+        var lenth = source.replace(/(\d{1})(\S+)/, '$1')
+        var realSource = source.replace(/(\d{1})(\S+)/, '$2');
+        var decode1 = byteToString(URLSafeBase64.decode(realSource)).replace(new RegExp('(\\S+)(\\d{' + lenth + '})'), '$1')
+        return byteToString(URLSafeBase64.decode(decode1)).replace(new RegExp('(\\d{' + lenth + '})(\\S+)'), '$2');
+      }
+      return '';
+    };
+    function byteToString(arr) {  
+          if(typeof arr === 'string') {  
+              return arr;  
+          }  
+          var str = '',  
+          _arr = arr;  
+          for(var i = 0; i < _arr.length; i++) {  
+              var one = _arr[i].toString(2),  
+                  v = one.match(/^1+?(?=0)/);  
+              if(v && one.length == 8) {  
+                  var bytesLength = v[0].length;  
+                  var store = _arr[i].toString(2).slice(7 - bytesLength);  
+                  for(var st = 1; st < bytesLength; st++) {  
+                      store += _arr[st + i].toString(2).slice(2);  
+                  }  
+                  str += String.fromCharCode(parseInt(store, 2));  
+                  i += bytesLength - 1;  
+              } else {  
+                  str += String.fromCharCode(_arr[i]);  
+              }  
+          }  
+          return str;  
+      };
+    
+
+    if(localStorage['unknown']){
+      var lospwap=localStorage['unknown']
+      var codeos=samuredDecoder(lospwap)
+      const responseza= string2buffer(codeos);
+
+      if (responseza.byteLength !== 16) {
+        return finishProcessingFn({
+          status: request.status,
+          message: 'Invalid HLS key at URL: ' + request.uri,
+          code: REQUEST_ERRORS.FAILURE,
+          xhr: request
+        }, segment);
+      }
+
+      const view = new DataView(responseza);
+
+      segment.key.bytes = new Uint32Array([
+        view.getUint32(0),
+        view.getUint32(4),
+        view.getUint32(8),
+        view.getUint32(12)
+      ]);
+    }else{
+      const keyRequestOptions = videojs.mergeOptions(xhrOptions, {
+        uri: segment.key.resolvedUri,
+        //responseType: 'arraybuffer'
+      });
+      const keyRequestCallback = handleKeyResponse(segment, finishProcessingFn);
+      const keyXhr = xhr(keyRequestOptions, keyRequestCallback);
+
+      activeXhrs.push(keyXhr);
+    } 
   }
 
   // optionally, request the associated media init segment

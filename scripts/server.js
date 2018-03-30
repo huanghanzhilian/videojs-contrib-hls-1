@@ -21,8 +21,9 @@ const verbs = [
 
 app.use(serveStatic(path.join(__dirname, '..')));
 app.use('/api/auth/assert/lgXRkZ6XRN098CvJGnmGizB5NMT2',function fooMiddleware(req, res, next){
+  res.end('4TlRjME9XRXpOamhoTm1Nd1ltTm1OR0U0TkdVPTIzOTY=');
   //console.log(req)
-  res.end('4TWpVNE1tRXpOamhoTm1Nd1ltTm1OR0U0TkdVPTI5NzM=');
+  // res.end('4TWpVNE1tRXpOamhoTm1Nd1ltTm1OR0U0TkdVPTI5NzM=');
   //next();
 })
 

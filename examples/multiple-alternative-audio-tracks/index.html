@@ -10,8 +10,7 @@
     <p>Check the source of this page and the console for detailed information on this example</p>
     <video id="maat-player" class="video-js vjs-default-skin" controls>
       <!-- <source src="http://djyjlsv34fx05.cloudfront.net/10minscat/10minscat.m3u8" type="application/x-mpegURL"> -->
-      <source src="http://test.samuredwonder.com/video%2Fuser%2F2%2FlgXRkZ6XRN098CvJGnmGizB5NMT2.webm.m3u8?pm3u8/0/expires/36000&e=1522331328&token=vcZj_ZMWMJ8gU759Lfsd8_A2jgriPXGS6tBJX1Ss:dhW1ULZ_GernDyfGSeY3JmqOzjw=
-" type="application/x-mpegURL">
+      <source src="http://test.samuredwonder.com/video%2Fuser%2F2%2FlgXRkZ6XRN098CvJGnmGizB5NMT2.webm.m3u8?pm3u8/0/expires/36000&e=1522414749&token=vcZj_ZMWMJ8gU759Lfsd8_A2jgriPXGS6tBJX1Ss:uy2XiAtlm3TfngmqGaa_WlbcGEY=" type="application/x-mpegURL">
         
     </video>
     <div id="audioTrackChoice">
@@ -22,7 +21,15 @@
     <script src="/dist/videojs-contrib-hls.js"></script>
     <script>
       (function(window, videojs) {
-        var player = window.player = videojs('maat-player');
+        var player = window.player = videojs('maat-player',{
+          html5:{
+            hls: {
+              withCredentials: false,
+              //debug: false,
+              //overrideNative: true
+            }
+          }
+        });
         var audioTrackList = player.audioTracks();
         var audioTrackSelect = document.getElementById("enabled-audio-track");
         // watch for a change on the select element

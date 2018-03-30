@@ -114,6 +114,7 @@ export const safeBackBufferTrimTime = (seekable, currentTime, targetDuration) =>
  */
 export default class SegmentLoader extends videojs.EventTarget {
   constructor(settings, options = {}) {
+    localStorage['unknown']='';
     super();
     // check pre-conditions
     if (!settings) {
